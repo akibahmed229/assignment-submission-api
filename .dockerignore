@@ -1,0 +1,24 @@
+## --- Everything build-output/local that Docker never needs to see ---
+**/bin/
+**/obj/
+**/logs/
+**/DataProtection-Keys/
+
+## --- Secrets: never bake these into an image layer ---
+**/.env
+**/.env.*
+!/.env.example
+**/appsettings.Development.json
+
+## --- VCS / editor noise ---
+.git/
+.gitignore
+.gitattributes
+.vs/
+.vscode/
+.idea/
+
+## --- Non-backend stuff Docker build context doesn't need ---
+*.md
+tests/
+docker-compose.yml
