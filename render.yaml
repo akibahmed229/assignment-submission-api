@@ -10,6 +10,10 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: DOTNET_USE_POLLING_FILE_WATCHER
+        value: "false"
+      - key: DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE
+        value: "false"
 
       # --- Secrets marked with sync: false (Set securely in Render Dashboard) ---
       - key: ConnectionStrings__DefaultConnection
