@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: assignment-submission-api
+    runtime: docker
+    dockerfilePath: ./src/AssignmentSubmissionSystem.Api/Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /swagger/index.html
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+      # --- Secrets marked with sync: false (Set securely in Render Dashboard) ---
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Secret
+        sync: false
+      - key: Seed__AdminPassword
+        sync: false
+      - key: Seed__TeacherPassword
+        sync: false
+      - key: Seed__StudentPassword
+        sync: false
+
+      # --- Non-sensitive configuration ---
+      - key: Jwt__Issuer
+        value: AssignmentSubmissionSystem
+      - key: Jwt__Audience
+        value: AssignmentSubmissionSystemClient
+      - key: Jwt__ExpiryMinutes
+        value: "60"
