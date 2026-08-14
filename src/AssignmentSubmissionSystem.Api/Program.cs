@@ -105,10 +105,14 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db, hasher, config);
 }
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Assignment API v1");
+        c.RoutePrefix = "swagger"; // Serves Swagger UI at /swagger
+    });
 }
 
 
