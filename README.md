@@ -16,7 +16,7 @@ grades and feedback.
 
 - **Frontend Application (Live):** [https://assignment-submission-frontend-six.vercel.app](https://assignment-submission-frontend-six.vercel.app)
 - **API Swagger Documentation (Live):** [https://assignment-submission-api-bd69.onrender.com/swagger](https://assignment-submission-api-bd69.onrender.com/swagger)
-- **For User Credentials:** [Demo Credentials](#-demo-credentials)
+- **For User Credentials:** [Demo Credentials](#demo-credentials)
 
 ## Tech Stack
 
