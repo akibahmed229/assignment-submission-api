@@ -81,8 +81,8 @@ unauthenticated request reach business logic at all.
 
 ## Database Schema
 
-See [`DATABASE_SCHEMA.md`](./DATABASE_SCHEMA.md) and
-[`schema-erd.mermaid`](./schema-erd.mermaid) for the full entity
+See [`DATABASE_SCHEMA.md`](./doc/DATABASE_SCHEMA.md) and
+[`schema-erd.mermaid`](./doc/schema-erd.mermaid) for the full entity
 relationship diagram and table-by-table explanation. Summary:
 
 - **`User`** — one table for all three roles, distinguished by `Role`.
