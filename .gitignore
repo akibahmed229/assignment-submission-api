@@ -1,0 +1,12 @@
+## --- NuGet package cache (project-local, per nuget.config) ---
+## Same role as node_modules -- fully reproducible from .csproj + restore,
+## never belongs in version control. Pattern is recursive in case the cache
+## folder ends up nested under a different project later.
+**/.nuget/packages/
+packages/
+
+
+## --- .env / secrets ---
+.env
+.env.*
+!.env.example

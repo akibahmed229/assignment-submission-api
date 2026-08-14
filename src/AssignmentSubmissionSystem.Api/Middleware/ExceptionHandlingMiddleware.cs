@@ -17,6 +17,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             var (status, message) = ex switch
             {
                 NotFoundException => (HttpStatusCode.NotFound, ex.Message),
+                ForbiddenAccessException => (HttpStatusCode.Forbidden, ex.Message),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ex.Message),
                 InvalidOperationException => (HttpStatusCode.BadRequest, ex.Message),
                 _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")

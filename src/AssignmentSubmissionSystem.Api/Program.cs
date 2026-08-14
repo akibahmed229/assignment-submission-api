@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using DotNetEnv;
+using System.Text.Json.Serialization;
 
 Env.TraversePath().Load(); // reads .env from repo root, sets process env vars
 
@@ -24,9 +25,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // --- App services ---
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<ITeacherAssignmentService, TeacherAssignmentService>();
+builder.Services.AddScoped<IStudentEnrollmentService, StudentEnrollmentService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 
 // --- JWT auth ---
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
@@ -78,6 +87,12 @@ builder.Services.AddSwaggerGen(options =>
     });
     ;
 });
+
+
+// Enums serialize, convert map number into roles
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 

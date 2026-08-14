@@ -12,25 +12,35 @@ services:
     volumes:
       - assignment_submission_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  # Optional: run the API in Docker too. Comment out while you're actively
-  # developing locally with `dotnet watch` -- it's here for parity/demo purposes.
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: src/AssignmentSubmissionSystem.API/Dockerfile
-  #   container_name: assignment-submission-api
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   ports:
-  #     - "5000:8080"
-  #   env_file:
-  #     - .env
+  api:
+    build:
+      context: .
+      dockerfile: src/AssignmentSubmissionSystem.Api/Dockerfile
+    container_name: assignment-submission-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5201:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      # Overrides localhost to 'postgres' so the API connects inside the Docker network
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-assignment_submission_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-changeme}
+      # JWT settings passed from .env
+      - Jwt__Secret=${Jwt__Secret}
+      - Jwt__Issuer=${Jwt__Issuer}
+      - Jwt__Audience=${Jwt__Audience}
+      - Jwt__ExpiryMinutes=${Jwt__ExpiryMinutes:-60}
+      # Seed passwords passed from .env
+      - Seed__AdminPassword=${Seed__AdminPassword}
+      - Seed__TeacherPassword=${Seed__TeacherPassword}
+      - Seed__StudentPassword=${Seed__StudentPassword}
 
 volumes:
   assignment_submission_pgdata:

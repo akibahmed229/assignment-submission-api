@@ -13,10 +13,14 @@ public class DbSeeder
 
         if (await db.Users.AnyAsync()) return; // already seeded
 
+        string adminPwd = config["Seed:AdminPassword"] ?? "Admin@12345";
+        string teacherPwd = config["Seed:TeacherPassword"] ?? "Teacher@12345";
+        string studentPwd = config["Seed:StudentPassword"] ?? "Student@12345";
+
         db.Users.AddRange(
-            new User { FullName = "System Admin", Email = "admin@assignmentsystem.local", Role = Role.Admin, PasswordHash = hasher.Hash(config["Seed:AdminPassword"]!.ToString()) },
-            new User { FullName = "Demo Teacher", Email = "teacher@assignmentsystem.local", Role = Role.Teacher, PasswordHash = hasher.Hash(config["Seed:TeacherPassword"]!.ToString()) },
-            new User { FullName = "Demo Student", Email = "student@assignmentsystem.local", Role = Role.Student, PasswordHash = hasher.Hash(config["Seed:StudentPassword"]!.ToString()) }
+            new User { FullName = "System Admin", Email = "admin@assignmentsystem.local", Role = Role.Admin, PasswordHash = hasher.Hash(adminPwd) },
+            new User { FullName = "Demo Teacher", Email = "teacher@assignmentsystem.local", Role = Role.Teacher, PasswordHash = hasher.Hash(teacherPwd) },
+            new User { FullName = "Demo Student", Email = "student@assignmentsystem.local", Role = Role.Student, PasswordHash = hasher.Hash(studentPwd) }
         );
 
         await db.SaveChangesAsync();

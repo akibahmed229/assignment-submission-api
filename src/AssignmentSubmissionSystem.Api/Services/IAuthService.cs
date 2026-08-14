@@ -17,9 +17,7 @@ public class AuthService(AppDbContext db, IPasswordHasher hasher, IJwtService jw
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
     {
         if (await db.Users.AnyAsync(u => u.Email == dto.Email))
-        {
             throw new InvalidOperationException("Email is already registered.");
-        }
 
         var user = new User
         {

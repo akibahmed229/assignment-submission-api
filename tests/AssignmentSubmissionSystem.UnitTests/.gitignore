@@ -1,0 +1,54 @@
+## --- NuGet package cache (project-local, per nuget.config) ---
+## Same role as node_modules -- fully reproducible from .csproj + restore,
+## never belongs in version control. Pattern is recursive in case the cache
+## folder ends up nested under a different project later.
+**/.nuget/packages/
+packages/
+
+## --- Build output ---
+bin/
+obj/
+out/
+publish/
+
+## --- .env / secrets ---
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+*.pfx
+*.key
+
+## --- Logs ---
+logs/
+*.log
+
+## --- User/machine-specific ---
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+.vscode/
+*.code-workspace
+
+## --- ASP.NET Core Data Protection keys (dev, unencrypted at rest) ---
+## These are the "keys will not be encrypted at rest" warning you saw in
+## the logs -- machine-local, never portable, must never be committed.
+**/DataProtection-Keys/
+
+## --- Test results / coverage ---
+TestResults/
+coverage/
+*.trx
+
+## --- OS junk ---
+.DS_Store
+Thumbs.db
+
+## --- Nix (if you generate a local dev shell result) ---
+result
+result-*

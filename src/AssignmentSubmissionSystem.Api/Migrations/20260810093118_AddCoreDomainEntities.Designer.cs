@@ -3,6 +3,7 @@ using System;
 using AssignmentSubmissionSystem.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AssignmentSubmissionSystem.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260810093118_AddCoreDomainEntities")]
+    partial class AddCoreDomainEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,8 +128,8 @@ namespace AssignmentSubmissionSystem.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Code")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -157,13 +160,13 @@ namespace AssignmentSubmissionSystem.Api.Migrations
                     b.Property<string>("Feedback")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("GraddedByTeacherId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("GradedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("GradedByTeacherId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("Marks")
+                    b.Property<int?>("Mark")
                         .HasColumnType("integer");
 
                     b.Property<string>("Status")
