@@ -13,9 +13,9 @@ public class DbSeeder
 
         if (await db.Users.AnyAsync()) return; // already seeded
 
-        string adminPwd = config["Seed:AdminPassword"] ?? "Admin@12345";
-        string teacherPwd = config["Seed:TeacherPassword"] ?? "Teacher@12345";
-        string studentPwd = config["Seed:StudentPassword"] ?? "Student@12345";
+        string adminPwd = config["Seed:AdminPassword"] ?? "Admin123";
+        string teacherPwd = config["Seed:TeacherPassword"] ?? "Teacher123";
+        string studentPwd = config["Seed:StudentPassword"] ?? "Student123";
 
         db.Users.AddRange(
             new User { FullName = "System Admin", Email = "admin@assignmentsystem.local", Role = Role.Admin, PasswordHash = hasher.Hash(adminPwd) },
