@@ -12,6 +12,12 @@ publish them, and grade student submissions. Students see published
 assignments for their enrolled classes, submit answers, and view their
 grades and feedback.
 
+## Live Demo
+
+- **Frontend Application (Live):** [https://assignment-submission-frontend-six.vercel.app](https://assignment-submission-frontend-six.vercel.app)
+- **API Swagger Documentation (Live):** [https://assignment-submission-api-bd69.onrender.com/swagger](https://assignment-submission-api-bd69.onrender.com/swagger)
+- **For User Credentials:** [Demo Credentials](#-demo-credentials)
+
 ## Tech Stack
 
 | Layer            | Technology                                                     |
@@ -150,11 +156,11 @@ Seeded automatically on first run. Passwords come from `.env`
 (`Seed__AdminPassword`, etc.) — the values below are the defaults if you
 haven't overridden them.
 
-| Role    | Email                            | Password        |
-| ------- | -------------------------------- | --------------- |
-| Admin   | `admin@assignmentsystem.local`   | `Admin@12345`   |
-| Teacher | `teacher@assignmentsystem.local` | `Teacher@12345` |
-| Student | `student@assignmentsystem.local` | `Student@12345` |
+| Role    | Email                            | Password     |
+| ------- | -------------------------------- | ------------ |
+| Admin   | `admin@assignmentsystem.local`   | `Admin123`   |
+| Teacher | `teacher@assignmentsystem.local` | `Teacher123` |
+| Student | `student@assignmentsystem.local` | `Student123` |
 
 ## API Overview
 
@@ -205,6 +211,9 @@ needed to run the suite.
 A companion Next.js/TypeScript frontend consumes this API — see its own
 README for setup. It expects `NEXT_PUBLIC_API_URL` to point at this API's
 base URL (e.g. `http://localhost:5201/api`).
+
+The companion Next.js frontend is deployed live on Vercel at [https://assignment-submission-frontend-six.vercel.app](https://assignment-submission-frontend-six.vercel.app).
+The github repo for companion fronted at [https://github.com/akibahmed229/assignment-submission-frontend](https://github.com/akibahmed229/assignment-submission-frontend).
 
 ## Assumptions
 
