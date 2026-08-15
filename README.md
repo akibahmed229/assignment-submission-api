@@ -237,6 +237,12 @@ The github repo for companion fronted at [https://github.com/akibahmed229/assign
   `Submitted`, so a teacher can decide case-by-case whether to grade it.
   Hard-blocking late submissions instead is a one-line change in
   `SubmissionService.SubmitAsync` if the evaluator's expectation differs.
+- "Manage application-level settings where necessary" (Admin) is not
+  implemented — the brief doesn't specify what settings the system should
+  have, and nothing elsewhere in the requirements implies configurable
+  behavior beyond what's already covered (roles, deadlines, grading).
+  Treated as out of scope pending clarification, rather than building
+  a speculative settings screen with no defined purpose.
 
 ## Known Limitations
 

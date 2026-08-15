@@ -11,7 +11,6 @@ public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
     [Authorize(Roles = "Admin")]
-    [AllowAnonymous]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
         => Ok(await authService.RegisterAsync(dto));
     // [ApiController] already returned 400 automatically if `dto` failed

@@ -13,8 +13,10 @@ public interface ISubmissionService
     Task<SubmissionResponseDto> SubmitAsync(Guid assignmentId, CreateSubmissionDto dto);
     Task<SubmissionResponseDto> UpdateAsync(Guid submissionId, CreateSubmissionDto dto);
     Task<SubmissionResponseDto> GradeAsync(Guid submissionId, GradeSubmissionDto dto);
+    Task<SubmissionResponseDto> ChangeStatusAsync(Guid submissionId, UpdateSubmissionStatusDto newStatus);
     Task<List<SubmissionResponseDto>> GetForAssignmentAsync(Guid assignmentId);
     Task<List<SubmissionResponseDto>> GetMineAsync();
+    Task<List<SubmissionOverviewDto>> GetAllAsync();
 }
 
 public class SubmissionService(AppDbContext db, ICurrentUserService currentUser) : ISubmissionService
@@ -112,6 +114,26 @@ public class SubmissionService(AppDbContext db, ICurrentUserService currentUser)
         return ToDto(entity);
     }
 
+    public async Task<SubmissionResponseDto> ChangeStatusAsync(Guid submissionId, UpdateSubmissionStatusDto newStatus)
+    {
+        var entity = await db.Submissions.Include(s => s.Assignment).FirstOrDefaultAsync(s => s.Id == submissionId) ??
+            throw new NotFoundException($"Submission {submissionId} was not found.");
+
+        if (currentUser.Role != Role.Admin && entity.Assignment.TeacherId != currentUser.UserId)
+            throw new ForbiddenAccessException("You can only change status for submissions on assignments you created.");
+
+        // Graded specifically requires marks -- force that transition through
+        // the dedicated grade endpoint so a status change can't silently mark
+        // something "Graded" with no score attached.
+        if (newStatus.Status == SubmissionStatus.Graded)
+            throw new InvalidOperationException("Use the grade endpoint to mark a submission as Graded -- it requires entering marks.");
+
+        entity.Status = newStatus.Status;
+        await db.SaveChangesAsync();
+
+        return ToDto(entity);
+    }
+
     public async Task<List<SubmissionResponseDto>> GetForAssignmentAsync(Guid assignmentId)
     {
         var assignment = await db.Assignments.FindAsync(assignmentId) ??
@@ -139,4 +161,22 @@ public class SubmissionService(AppDbContext db, ICurrentUserService currentUser)
         return submissions.Select(ToDto).ToList();
     }
 
+    public async Task<List<SubmissionOverviewDto>> GetAllAsync()
+    {
+        return await db.Submissions
+            .Include(s => s.Assignment)
+            .Include(s => s.Student)
+            .OrderByDescending(s => s.SubmittedAt)
+            .Select(s => new SubmissionOverviewDto(
+                          s.Id,
+                          s.AssignmentId,
+                          s.Assignment.Title,
+                          s.StudentId,
+                          s.Student.FullName,
+                          s.SubmittedAt,
+                          s.Status,
+                          s.Marks,
+                          s.Assignment.MaxMarks))
+            .ToListAsync();
+    }
 }

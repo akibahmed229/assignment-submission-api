@@ -17,6 +17,11 @@ public class GradeSubmissionDto
     public string? Feedback { get; set; }
 }
 
+public class UpdateSubmissionStatusDto
+{
+    [Required] public SubmissionStatus Status { get; set; }
+}
+
 public record SubmissionResponseDto(
         Guid Id,
         Guid AssignmentId,
@@ -27,4 +32,16 @@ public record SubmissionResponseDto(
         int? Marks,
         string? Feedback,
         DateTime? GradedAt
+);
+
+public record SubmissionOverviewDto(
+    Guid Id,
+    Guid AssignmentId,
+    string AssignmentTitle,
+    Guid StudentId,
+    string StudentName,
+    DateTime SubmittedAt,
+    SubmissionStatus Status,
+    int? Marks,
+    int MaxMarks
 );
