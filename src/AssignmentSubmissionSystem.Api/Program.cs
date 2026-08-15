@@ -67,7 +67,11 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "https://assignment-submission-frontend-six.vercel.app").AllowAnyHeader().AllowAnyMethod()));
 
-builder.Services.AddControllers();
+// Enums serialize, convert map number into roles
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 builder.Services.AddEndpointsApiExplorer();
 
 // --- Swagger, with a JWT "Authorize" button --- 
@@ -89,12 +93,6 @@ builder.Services.AddSwaggerGen(options =>
     });
     ;
 });
-
-
-// Enums serialize, convert map number into roles
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
