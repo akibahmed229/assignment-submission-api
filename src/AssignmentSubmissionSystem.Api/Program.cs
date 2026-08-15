@@ -14,20 +14,6 @@ Env.TraversePath().Load(); // reads .env from repo root, sets process env vars
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- CORS Configuration (Single Definition) ---
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "https://assignment-submission-frontend-six.vercel.app")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
-
 // --- Logging ---
 builder.Host.UseSerilog((context, config) => config
         .ReadFrom.Configuration(context.Configuration)
@@ -77,7 +63,9 @@ builder.Services.AddAuthorization();
 // --- CORS (for the Next.js frontend) ---
 builder.Services.AddCors(options =>
         options.AddPolicy("Frontend", policy =>
-            policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod()));
+            policy.WithOrigins(
+                "http://localhost:3000",
+                "https://assignment-submission-frontend-six.vercel.app").AllowAnyHeader().AllowAnyMethod()));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
