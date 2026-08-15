@@ -1,21 +1,16 @@
 using System.Text;
-using System.Text.Json.Serialization;
 using AssignmentSubmissionSystem.Api.Data;
 using AssignmentSubmissionSystem.Api.Middleware;
 using AssignmentSubmissionSystem.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using DotNetEnv;
+using System.Text.Json.Serialization;
 
-// 1. Only load local .env in Development (Skip in Docker/Production)
-if (string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase))
-{
-    Env.TraversePath().Load();
-}
+Env.TraversePath().Load(); // reads .env from repo root, sets process env vars
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +21,10 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:3000",
-                "https://assignment-submission-frontend-six.vercel.app"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+                "https://assignment-submission-frontend-six.vercel.app")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -44,7 +38,7 @@ builder.Host.UseSerilog((context, config) => config
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// --- App Services ---
+// --- App services ---
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -57,7 +51,7 @@ builder.Services.AddScoped<IStudentEnrollmentService, StudentEnrollmentService>(
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 
-// --- JWT Auth ---
+// --- JWT auth ---
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
 builder.Services.AddAuthentication(options =>
 {
@@ -79,14 +73,16 @@ builder.Services.AddAuthentication(options =>
 });
 builder.Services.AddAuthorization();
 
-// --- Controllers & JSON Formatting ---
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+// --- CORS (for the Next.js frontend) ---
+builder.Services.AddCors(options =>
+        options.AddPolicy("Frontend", policy =>
+            policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod()));
+
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// --- Swagger ---
+// --- Swagger, with a JWT "Authorize" button --- 
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Assignment & Submission API", Version = "v1" });
@@ -103,11 +99,18 @@ builder.Services.AddSwaggerGen(options =>
     {
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
+    ;
 });
+
+
+// Enums serialize, convert map number into roles
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
-// --- Migrate & Seed on Startup ---
+// --- Migrate + seed on startup ---
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -118,37 +121,28 @@ using (var scope = app.Services.CreateScope())
 
 // --- Middleware Pipeline Order ---
 
-// 1. Handle reverse proxy headers from Render
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseSerilogRequestLogging();
-
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Assignment API v1");
-        c.RoutePrefix = "swagger";
+        c.RoutePrefix = "swagger"; // Serves Swagger UI at /swagger
     });
 }
 
-// 2. Only redirect HTTPS in Development local testing (Render handles HTTPS externally)
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSerilogRequestLogging();
+
+// Only redirect HTTPS in Development local testing (Render handles HTTPS externally
 if (app.Environment.IsDevelopment())
-{
     app.UseHttpsRedirection();
-}
 
-// 3. CORS MUST be executed before Authentication & Authorization
+// CORS MUST be executed before Authentication & Authorization
 app.UseCors("Frontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
