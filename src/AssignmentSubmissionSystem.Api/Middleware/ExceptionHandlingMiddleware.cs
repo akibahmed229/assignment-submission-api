@@ -28,8 +28,14 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             else
                 logger.LogWarning("Handled exception: {Message}", ex.Message);
 
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)status;
+            // Clear existing response headers (except CORS) if response hasn't started
+            if (!context.Response.HasStarted)
+            {
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = (int)status;
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new { status = (int)status, message }));
+            }
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { status = (int)status, message }));
         }

@@ -118,15 +118,15 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 }
 
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseSerilogRequestLogging();
+// CORS MUST be first so headers are attached even if downstream code throws an exception
+app.UseCors("Frontend");
 
 // Only redirect HTTPS in Development local testing (Render handles HTTPS externally
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-// CORS MUST be executed before Authentication & Authorization
-app.UseCors("Frontend");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
