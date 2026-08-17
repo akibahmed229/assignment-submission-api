@@ -36,8 +36,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new { status = (int)status, message }));
             }
-
-            await context.Response.WriteAsync(JsonSerializer.Serialize(new { status = (int)status, message }));
         }
     }
 }
