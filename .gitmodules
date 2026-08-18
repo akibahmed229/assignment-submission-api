@@ -1,0 +1,3 @@
+[submodule "src/assignment_submission_system_frontend"]
+	path = src/assignment_submission_system_frontend
+	url = git@github.com:akibahmed229/assignment-submission-frontend.git
