@@ -141,7 +141,7 @@ maps to `Configuration["Seed:AdminPassword"]`, and so on.
 docker compose up -d postgres
 ```
 
-### 3. Apply migrations
+### 4. Apply migrations
 
 ```bash
 # 1. Restore dependencies
@@ -156,7 +156,7 @@ dotnet ef database update
 (Migrations are already checked into the repo under `Migrations/` — no
 need to generate new ones for a fresh clone.)
 
-### 4. Run the API
+### 5. Run the API
 
 ```bash
 dotnet run
@@ -185,22 +185,26 @@ quick reference of what exists and who can call it.
 
 | Endpoint                                        | Method(s)                 | Who                                         |
 | ----------------------------------------------- | ------------------------- | ------------------------------------------- |
-| `/api/auth/register`, `/api/auth/login`         | POST                      | Anyone                                      |
+| `/api/auth/register`                            | POST                      | Admin                                       |
+| `/api/auth/login`                               | POST                      | Anyone                                      |
 | `/api/users?role={Role}`                        | GET                       | Admin                                       |
+| `/api/users/{id}/status`                        | PATCH                     | Admin                                       |
 | `/api/schoolclass`                              | GET, POST, DELETE `/{id}` | GET: any authenticated user · write: Admin  |
 | `/api/subjects`                                 | GET, POST, DELETE `/{id}` | GET: any authenticated user · write: Admin  |
 | `/api/teacherassignments`                       | GET, POST, DELETE `/{id}` | Admin                                       |
 | `/api/teacherassignments/mine`                  | GET                       | Teacher                                     |
 | `/api/studentenrollments`                       | POST, DELETE `/{id}`      | Admin                                       |
 | `/api/studentenrollments/class/{schoolClassId}` | GET                       | Admin, Teacher                              |
-| `/api/assignments`                              | POST                      | Teacher                                     |
+| `/api/assignments`                              | GET, POST, DELETE `/{id}` | Teacher                                     |
 | `/api/assignments/mine`                         | GET                       | Any (scope depends on role — see below)     |
 | `/api/assignments/{id}`                         | GET, DELETE               | Ownership/enrollment-checked in the service |
 | `/api/assignments/{id}/publish`                 | PATCH                     | Teacher (must own the assignment)           |
 | `/api/assignments/{assignmentId}/submissions`   | POST, GET                 | POST: Student · GET: Admin, Teacher         |
 | `/api/submissions/{id}`                         | PUT                       | Student (own submission only)               |
 | `/api/submissions/{id}/grade`                   | POST                      | Admin, Teacher (must own the assignment)    |
+| `/api/submissions/{id}/status`                  | PATCH                     | Admin, Teacher (must own the assignment)    |
 | `/api/submissions/mine`                         | GET                       | Student                                     |
+| `/api/submissions`                              | GET                       | Admin (Show all submissions)                |
 
 **`GET /api/assignments/mine` is role-scoped, not a fixed list:**
 Admin sees every assignment; a Teacher sees only what they created; a
