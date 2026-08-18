@@ -6,7 +6,7 @@ public static class RateLimitingExtensions
 {
     public const string LoginPolicy = "LoginPolicy";
 
-    public static IServiceCollection AddRateLimiting(this IServiceCollection services)
+    public static IServiceCollection AddLoginRateLimiting(this IServiceCollection services)
     {
         services.AddRateLimiter(options =>
         {

@@ -17,7 +17,7 @@ builder.Services
     .AddApplicationServices()
     .AddJwtAuthentication(builder.Configuration)
     .AddFrontendCors()
-    .AddRateLimiting()
+    .AddLoginRateLimiting()
     .AddSwaggerWithJwt();
 
 builder.Services.AddControllers()
