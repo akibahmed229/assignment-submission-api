@@ -1,127 +1,31 @@
-using System.Text;
 using AssignmentSubmissionSystem.Api.Data;
+using AssignmentSubmissionSystem.Api.Extensions;
 using AssignmentSubmissionSystem.Api.Middleware;
 using AssignmentSubmissionSystem.Api.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
-using Serilog;
 using DotNetEnv;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Serilog;
+using System.Text.Json.Serialization;
 
-Env.TraversePath().Load(); // reads .env from repo root, sets process env vars
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Logging ---
-builder.Host.UseSerilog((context, config) => config
-        .ReadFrom.Configuration(context.Configuration)
-        .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
+builder.AddSerilogLogging();
 
-// --- Database ---
-builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services
+    .AddPersistence(builder.Configuration)
+    .AddApplicationServices()
+    .AddJwtAuthentication(builder.Configuration)
+    .AddCors()
+    .AddRateLimiting()
+    .AddSwaggerWithJwt();
 
-// --- App services ---
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<ISchoolClassService, SchoolClassService>();
-builder.Services.AddScoped<ISubjectService, SubjectService>();
-builder.Services.AddScoped<ITeacherAssignmentService, TeacherAssignmentService>();
-builder.Services.AddScoped<IStudentEnrollmentService, StudentEnrollmentService>();
-builder.Services.AddScoped<IAssignmentService, AssignmentService>();
-builder.Services.AddScoped<ISubmissionService, SubmissionService>();
-
-// --- JWT auth ---
-var jwtSecret = builder.Configuration["Jwt:Secret"]!;
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
-    };
-});
-builder.Services.AddAuthorization();
-
-
-// --- CORS (for the Next.js frontend) ---
-builder.Services.AddCors(options =>
-        options.AddPolicy("Frontend", policy =>
-            policy.WithOrigins(
-                "http://localhost:3000",
-                "https://assignment-submission-frontend-six.vercel.app").AllowAnyHeader().AllowAnyMethod()));
-
-// --- Rate limiting: protect /api/auth/login from brute-force attempts ---
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddPolicy("LoginPolicy", httpContext =>
-            RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-                factory: _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 6,
-                    Window = TimeSpan.FromMinutes(1),
-                    QueueLimit = 0
-                }
-            )
-    );
-
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        context.HttpContext.Response.ContentType = "application/json";
-
-        await context.HttpContext.Response.WriteAsync(
-                """{"status":429,"title":"Too many login attempts. Please wait a minute and try again."}""",
-                cancellationToken
-        );
-    };
-});
-
-// Enums serialize, convert map number into roles
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();
-
-// --- Swagger, with a JWT "Authorize" button --- 
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Assignment & Submission API", Version = "v1" });
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Paste the JWT from /api/auth/login here (no \"Bearer \" prefix)."
-    });
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-    });
-    ;
-});
 
 var app = builder.Build();
 
@@ -134,36 +38,30 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db, hasher, config);
 }
 
-// --- Middleware Pipeline Order ---
-
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Assignment API v1");
-        c.RoutePrefix = "swagger"; // Serves Swagger UI at /swagger
+        c.RoutePrefix = "swagger";
     });
 }
 
-// Forward client real ip to server (Render specific) 
-// httpContext.Connection.RemoteIpAddress might report Render's internal proxy IP 
-// rather than the real client IP, unless Render forwards the original IP via X-Forwarded-For 
+// --- Middleware pipeline: order is load-bearing, kept explicit and inline
+// on purpose rather than hidden inside an extension method. ---
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
-// CORS MUST be first so headers are attached even if downstream code throws an exception
-app.UseCors("Frontend");
+app.UseCors(CorsExtensions.FrontendPolicy);   // must run early so CORS headers attach even if downstream code throws
+app.UseRateLimiter();                          // before auth -- reject excess requests before spending effort validating a JWT
 
-app.UseRateLimiter();
-
-// Only redirect HTTPS in Development local testing (Render handles HTTPS externally
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-app.UseSerilogRequestLogging(); // wraps the exception middleware to log final status codes (200, 401, 404, etc.)
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
