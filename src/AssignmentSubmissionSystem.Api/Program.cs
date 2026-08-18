@@ -17,7 +17,7 @@ builder.Services
     .AddPersistence(builder.Configuration)
     .AddApplicationServices()
     .AddJwtAuthentication(builder.Configuration)
-    .AddCors()
+    .AddFrontendCors()
     .AddRateLimiting()
     .AddSwaggerWithJwt();
 
@@ -50,10 +50,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 
 // --- Middleware pipeline: order is load-bearing, kept explicit and inline
 // on purpose rather than hidden inside an extension method. ---
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
 
 app.UseCors(CorsExtensions.FrontendPolicy);   // must run early so CORS headers attach even if downstream code throws
 app.UseRateLimiter();                          // before auth -- reject excess requests before spending effort validating a JWT

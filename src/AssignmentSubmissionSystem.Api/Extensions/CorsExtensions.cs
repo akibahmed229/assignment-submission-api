@@ -2,9 +2,9 @@ namespace AssignmentSubmissionSystem.Api.Extensions;
 
 public static class CorsExtensions
 {
-    public const string FrontendPolicy = "Fronted";
+    public const string FrontendPolicy = "Frontend";
 
-    public static IServiceCollection AddFrontedCors(this IServiceCollection services)
+    public static IServiceCollection AddFrontendCors(this IServiceCollection services)
     {
         services.AddCors(options =>
         {
