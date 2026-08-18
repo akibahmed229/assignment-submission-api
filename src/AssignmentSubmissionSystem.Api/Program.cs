@@ -3,7 +3,6 @@ using AssignmentSubmissionSystem.Api.Extensions;
 using AssignmentSubmissionSystem.Api.Middleware;
 using AssignmentSubmissionSystem.Api.Services;
 using DotNetEnv;
-using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using System.Text.Json.Serialization;
 
