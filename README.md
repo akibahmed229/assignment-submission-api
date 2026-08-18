@@ -111,7 +111,18 @@ relationship diagram and table-by-table explanation. Summary:
 
 ## Setup
 
-### 1. Environment variables
+### 1. Repository Cloning
+
+Since the repository includes the frontend as a git submodule, clone recursively:
+
+```bash
+git clone --recurse-submodules https://github.com/akibahmed229/assignment-submission-api.git
+cd AssignmentSubmissionSystem
+```
+
+_(If you already cloned without submodules, pull them using `git submodule update --init --recursive`)_
+
+### 2. Environment variables
 
 Copy the example file and fill in real values:
 
@@ -124,7 +135,7 @@ Generate a real JWT secret (32+ random characters) for `Jwt__Secret`.
 `Jwt__Secret` maps to `Configuration["Jwt:Secret"]`, `Seed__AdminPassword`
 maps to `Configuration["Seed:AdminPassword"]`, and so on.
 
-### 2. Start PostgreSQL
+### 3. Start PostgreSQL
 
 ```bash
 docker compose up -d postgres
@@ -133,6 +144,11 @@ docker compose up -d postgres
 ### 3. Apply migrations
 
 ```bash
+# 1. Restore dependencies
+dotnet restore
+dotnet tool restore
+
+# 2. Run database migrations
 cd src/AssignmentSubmissionSystem.Api
 dotnet ef database update
 ```
@@ -213,7 +229,28 @@ README for setup. It expects `NEXT_PUBLIC_API_URL` to point at this API's
 base URL (e.g. `http://localhost:5201/api`).
 
 The companion Next.js frontend is deployed live on Vercel at [https://assignment-submission-frontend-six.vercel.app](https://assignment-submission-frontend-six.vercel.app).
+
 The github repo for companion fronted at [https://github.com/akibahmed229/assignment-submission-frontend](https://github.com/akibahmed229/assignment-submission-frontend).
+
+### Running Frontend Locally
+
+The frontend is kept outside Docker Compose for quick local development iteration.
+
+Bash
+
+```
+# 1. Navigate to submodule directory
+cd src/assignment_submission_system_frontend
+
+# 2. Configure environment variable pointing to the running API
+echo "NEXT_PUBLIC_API_URL=http://localhost:5201/api" > .env.local
+
+# 3. Install dependencies and start development server
+npm install
+npm run dev
+```
+
+The Next.js application will start at `http://localhost:3000`.
 
 ## Assumptions
 
