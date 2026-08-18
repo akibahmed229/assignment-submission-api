@@ -227,11 +227,8 @@ The github repo for companion fronted at [https://github.com/akibahmed229/assign
   column, rather than separate tables per role — they share every field
   except `Role`; splitting them would add real EF mapping complexity for
   no benefit here.
-- **`Register` is open (`[AllowAnonymous]`)** rather than
-  Admin-only — convenient for local testing and Swagger. In a production
-  deployment this would be locked to `[Authorize(Roles = "Admin")]` so
-  only Admins create Teacher/Student accounts, per the brief's stated
-  role responsibilities.
+- **`Register` is `[Authorize(Roles = "Admin")]`** — so only Admins create
+  Teacher/Student accounts, per the brief's stated role responsibilities.
 - **Late submissions are accepted, not blocked** — a submission made
   after the deadline is still saved, just flagged `Late` instead of
   `Submitted`, so a teacher can decide case-by-case whether to grade it.
@@ -249,7 +246,6 @@ The github repo for companion fronted at [https://github.com/akibahmed229/assign
 - No refresh-token flow — JWTs expire after `Jwt__ExpiryMinutes` (default
   60 minutes) and the client must log in again. No revocation table, so a
   token can't be invalidated before it naturally expires.
-- No rate limiting on `/api/auth/login`.
 - No pagination on list endpoints (`/api/assignments/mine`,
   `/api/teacherassignments`, etc.) — acceptable at the assessment's data
   scale, would need addressing for a larger real-world dataset.

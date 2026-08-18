@@ -9,6 +9,8 @@ using Microsoft.OpenApi;
 using Serilog;
 using DotNetEnv;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 
 Env.TraversePath().Load(); // reads .env from repo root, sets process env vars
 
@@ -67,6 +69,33 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",
                 "https://assignment-submission-frontend-six.vercel.app").AllowAnyHeader().AllowAnyMethod()));
 
+// --- Rate limiting: protect /api/auth/login from brute-force attempts ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("LoginPolicy", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 6,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                }
+            )
+    );
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+
+        await context.HttpContext.Response.WriteAsync(
+                """{"status":429,"title":"Too many login attempts. Please wait a minute and try again."}""",
+                cancellationToken
+        );
+    };
+});
+
 // Enums serialize, convert map number into roles
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -117,15 +146,24 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
+// Forward client real ip to server (Render specific) 
+// httpContext.Connection.RemoteIpAddress might report Render's internal proxy IP 
+// rather than the real client IP, unless Render forwards the original IP via X-Forwarded-For 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // CORS MUST be first so headers are attached even if downstream code throws an exception
 app.UseCors("Frontend");
+
+app.UseRateLimiter();
 
 // Only redirect HTTPS in Development local testing (Render handles HTTPS externally
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(); // wraps the exception middleware to log final status codes (200, 401, 404, etc.)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -2,6 +2,7 @@ using AssignmentSubmissionSystem.Api.Models.Dtos;
 using AssignmentSubmissionSystem.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AssignmentSubmissionSystem.Api.Controllers;
 
@@ -18,6 +19,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("LoginPolicy")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
         => Ok(await authService.LoginAsync(dto));
 }
