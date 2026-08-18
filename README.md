@@ -20,18 +20,20 @@ grades and feedback.
 
 ## Tech Stack
 
-| Layer            | Technology                                                     |
-| ---------------- | -------------------------------------------------------------- |
-| Framework        | ASP.NET Core Web API (.NET 10)                                 |
-| Language         | C#                                                             |
-| Database         | PostgreSQL                                                     |
-| ORM              | Entity Framework Core (Npgsql provider)                        |
-| Auth             | JWT bearer tokens, role-based authorization                    |
-| Password hashing | BCrypt                                                         |
-| Validation       | DataAnnotations + `[ApiController]` automatic model validation |
-| Logging          | Serilog (console + rolling daily file)                         |
-| API docs         | Swagger / OpenAPI (Swashbuckle)                                |
-| Testing          | xUnit, Moq, FluentAssertions (or `Assert`), EF Core InMemory   |
+| Layer            | Technology                                                                 |
+| ---------------- | -------------------------------------------------------------------------- |
+| Framework        | ASP.NET Core Web API (.NET 10)                                             |
+| Language         | C#                                                                         |
+| Database         | PostgreSQL                                                                 |
+| ORM              | Entity Framework Core (Npgsql provider)                                    |
+| Auth             | JWT bearer tokens, role-based authorization                                |
+| Password hashing | BCrypt                                                                     |
+| Validation       | DataAnnotations + `[ApiController]` automatic model validation             |
+| Logging          | Serilog (console + rolling daily file)                                     |
+| RateLimiting     | ASP.NET Core Built-in Rate Limiting middleware                             |
+| CORS             | ASP.NET Core CORS policy (Allowing local dev & Vercel production frontend) |
+| API docs         | Swagger / OpenAPI (Swashbuckle)                                            |
+| Testing          | xUnit, Moq, FluentAssertions (or `Assert`), EF Core InMemory               |
 
 ## Architecture
 
